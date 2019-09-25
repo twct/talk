@@ -410,7 +410,7 @@ examples below will use the common `curl` tool:
 curl --request POST \
   --url "http://localhost:8080/api/graphql" \
   --header "content-type: application/json" \
-  --data '{"query":"query GetComments($url: String!) {story(url: $url) { id metadata { title } url comments { nodes { id body author { id username } } } } }","variables":{"url":"http://localhost:8080/"},"operationName":"GetComments"}'
+  --data '{"query":"query GetComments($url: String!) {stream(url: $url) { id metadata { title } url comments { nodes { id body author { id username } } } } }","variables":{"url":"http://localhost:8080/"},"operationName":"GetComments"}'
 ```
 
 When you unpack that, it's really quite simple. We're executing a `POST` request
@@ -420,7 +420,7 @@ request we want to make. It's composed of the `query`, `variables`, and
 
 ```graphql
 query GetComments($url: String!) {
-  story(url: $url) {
+  stream(url: $url) {
     metadata {
       title
     }
@@ -463,7 +463,7 @@ sort of like this:
 ```json
 {
   "data": {
-    "story": {
+    "stream": {
       "metadata": {
         "title": "Coral 5.0 – Embed Stream"
       },
@@ -498,7 +498,7 @@ level, like this:
           "column": 3
         }
       ],
-      "path": ["story"],
+      "path": ["stream"],
       "extensions": {
         "code": "STORY_URL_NOT_PERMITTED",
         "id": "e255e860-d3ab-11e9-acdf-b9e9700f06fa",
