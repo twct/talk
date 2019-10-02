@@ -1,3 +1,5 @@
+import { Config } from "coral-server/config";
+import { ReadOnlyError } from "coral-server/errors";
 import CommonContext, {
   CommonContextOptions,
 } from "coral-server/graph/common/context";
@@ -16,6 +18,18 @@ import TenantCache from "coral-server/services/tenant/cache";
 
 import loaders from "./loaders";
 import mutators from "./mutators";
+
+function readOnlyProxy<T extends {}>(config: Config, target: T): T {
+  if (!config.get("read_only")) {
+    return target;
+  }
+
+  return new Proxy(target, {
+    get() {
+      throw new ReadOnlyError();
+    },
+  });
+}
 
 export interface TenantContextOptions extends CommonContextOptions {
   tenant: Tenant;
@@ -65,6 +79,6 @@ export default class TenantContext extends CommonContext {
       this.clientID
     );
     this.loaders = loaders(this);
-    this.mutators = mutators(this);
+    this.mutators = readOnlyProxy(options.config, mutators(this));
   }
 }

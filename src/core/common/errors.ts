@@ -315,5 +315,15 @@ export enum ERROR_CODES {
    */
   RAW_QUERY_NOT_AUTHORIZED = "RAW_QUERY_NOT_AUTHORIZED",
 
+  /**
+   * USER_ALREADY_PREMOD is returned when a user is already pre-modded, and an
+   * attempt was made to premod the user again.
+   */
   USER_ALREADY_PREMOD = "USER_ALREADY_PREMOD",
+
+  /**
+   * READ_ONLY is returned when Coral is in read only mode, and cannot process
+   * any writes.
+   */
+  READ_ONLY = "READ_ONLY",
 }

@@ -15,6 +15,7 @@ import {
   wrapAuthn,
   wrapOAuth2Authn,
 } from "coral-server/app/middleware/passport";
+import { readOnlyAware } from "coral-server/app/middleware/readOnlyAware";
 import { RouterOptions } from "coral-server/app/router/types";
 
 function wrapPath(
@@ -36,18 +37,6 @@ export function createNewAuthRouter(
 ) {
   const router = express.Router();
 
-  // Mount the Local Authentication handlers.
-  router.post(
-    "/local",
-    jsonMiddleware,
-    wrapAuthn(passport, app.signingConfig, "local")
-  );
-
-  router.post("/local/signup", jsonMiddleware, signupHandler(app));
-  router.get("/local/forgot", forgotCheckHandler(app));
-  router.put("/local/forgot", jsonMiddleware, forgotResetHandler(app));
-  router.post("/local/forgot", jsonMiddleware, forgotHandler(app));
-
   // Mount the logout handler.
   router.delete("/", authenticate(passport), logoutHandler(app));
 
@@ -55,6 +44,21 @@ export function createNewAuthRouter(
   wrapPath(app, { passport }, router, "facebook");
   wrapPath(app, { passport }, router, "google");
   wrapPath(app, { passport }, router, "oidc");
+
+  // Mount the Local Authentication handlers.
+  router.post(
+    "/local",
+    jsonMiddleware,
+    wrapAuthn(passport, app.signingConfig, "local")
+  );
+
+  // Add the read only aware middleware to the stack.
+  router.use(readOnlyAware(app.config));
+
+  router.post("/local/signup", jsonMiddleware, signupHandler(app));
+  router.get("/local/forgot", forgotCheckHandler(app));
+  router.put("/local/forgot", jsonMiddleware, forgotResetHandler(app));
+  router.post("/local/forgot", jsonMiddleware, forgotHandler(app));
 
   return router;
 }

@@ -8,7 +8,12 @@ import { Strategy } from "passport-strategy";
 
 import { validate } from "coral-server/app/request/body";
 import { reconstructURL } from "coral-server/app/url";
-import { IntegrationDisabled, TokenInvalidError } from "coral-server/errors";
+import { Config } from "coral-server/config";
+import {
+  IntegrationDisabled,
+  ReadOnlyError,
+  TokenInvalidError,
+} from "coral-server/errors";
 import { GQLUSER_ROLE } from "coral-server/graph/tenant/schema/__generated__/types";
 import logger from "coral-server/logger";
 import { OIDCAuthIntegration } from "coral-server/models/settings";
@@ -135,6 +140,7 @@ export function getEnabledIntegration(
 export async function findOrCreateOIDCUser(
   mongo: Db,
   tenant: Tenant,
+  config: Config,
   integration: OIDCAuthIntegration,
   token: OIDCIDToken,
   now = new Date()
@@ -163,6 +169,10 @@ export async function findOrCreateOIDCUser(
   // Try to lookup user given their id provided in the `sub` claim.
   let user = await retrieveUserWithProfile(mongo, tenant.id, profile);
   if (!user) {
+    if (config.get("read_only")) {
+      throw new ReadOnlyError();
+    }
+
     if (!integration.allowRegistration) {
       // Registration is disabled, so we can't create the user user here.
       return null;
@@ -204,6 +214,7 @@ export async function findOrCreateOIDCUser(
 export function findOrCreateOIDCUserWithToken(
   mongo: Db,
   tenant: Tenant,
+  config: Config,
   client: JwksClient,
   integration: OIDCAuthIntegration,
   tokenString: string,
@@ -247,6 +258,7 @@ export function findOrCreateOIDCUserWithToken(
           const user = await findOrCreateOIDCUser(
             mongo,
             tenant,
+            config,
             integration,
             token,
             now
@@ -266,6 +278,7 @@ export function findOrCreateOIDCUserWithToken(
 const OIDC_SCOPE = "openid email profile";
 
 export interface OIDCStrategyOptions {
+  config: Config;
   mongo: Db;
   tenantCache: TenantCache;
 }
@@ -273,12 +286,14 @@ export interface OIDCStrategyOptions {
 export default class OIDCStrategy extends Strategy {
   public name = "oidc";
 
+  private config: Config;
   private mongo: Db;
   private cache: TenantCacheAdapter<StrategyItem>;
 
-  constructor({ mongo, tenantCache }: OIDCStrategyOptions) {
+  constructor({ config, mongo, tenantCache }: OIDCStrategyOptions) {
     super();
 
+    this.config = config;
     this.mongo = mongo;
     this.cache = new TenantCacheAdapter(tenantCache);
   }
@@ -359,6 +374,7 @@ export default class OIDCStrategy extends Strategy {
       const user = await findOrCreateOIDCUserWithToken(
         this.mongo,
         tenant,
+        this.config,
         client,
         integration,
         id_token,

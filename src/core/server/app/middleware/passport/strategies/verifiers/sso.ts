@@ -3,7 +3,7 @@ import { isNil } from "lodash";
 import { Db } from "mongodb";
 
 import { validate } from "coral-server/app/request/body";
-import { IntegrationDisabled } from "coral-server/errors";
+import { IntegrationDisabled, ReadOnlyError } from "coral-server/errors";
 import {
   GQLSSOAuthIntegration,
   GQLUSER_ROLE,
@@ -16,6 +16,7 @@ import {
 } from "coral-server/models/user";
 import { findOrCreate } from "coral-server/services/users";
 
+import { Config } from "coral-server/config";
 import {
   getSSOProfile,
   needsSSOUpdate,
@@ -27,6 +28,7 @@ import {
 } from "coral-server/services/jwt";
 import { AugmentedRedis } from "coral-server/services/redis";
 import { DateTime } from "luxon";
+
 import { Verifier } from "../jwt";
 
 export interface SSOStrategyOptions {
@@ -77,6 +79,7 @@ export const SSOTokenSchema = Joi.object()
 export async function findOrCreateSSOUser(
   mongo: Db,
   redis: AugmentedRedis,
+  config: Config,
   tenant: Tenant,
   integration: GQLSSOAuthIntegration,
   token: SSOToken,
@@ -113,6 +116,10 @@ export async function findOrCreateSSOUser(
     id,
   });
   if (!user) {
+    if (config.get("read_only")) {
+      throw new ReadOnlyError();
+    }
+
     if (!integration.allowRegistration) {
       // Registration is disabled, so we can't create the user user here.
       return null;
@@ -162,15 +169,18 @@ export async function findOrCreateSSOUser(
 }
 
 export interface SSOVerifierOptions {
+  config: Config;
   mongo: Db;
   redis: AugmentedRedis;
 }
 
 export class SSOVerifier implements Verifier<SSOToken> {
+  private config: Config;
   private mongo: Db;
   private redis: AugmentedRedis;
 
-  constructor({ mongo, redis }: SSOVerifierOptions) {
+  constructor({ config, mongo, redis }: SSOVerifierOptions) {
+    this.config = config;
     this.mongo = mongo;
     this.redis = redis;
   }
@@ -209,6 +219,7 @@ export class SSOVerifier implements Verifier<SSOToken> {
     return findOrCreateSSOUser(
       this.mongo,
       this.redis,
+      this.config,
       tenant,
       integration,
       token,

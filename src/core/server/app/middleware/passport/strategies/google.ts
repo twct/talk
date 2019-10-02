@@ -4,6 +4,7 @@ import OAuth2Strategy, {
   OAuth2StrategyOptions,
 } from "coral-server/app/middleware/passport/strategies/oauth2";
 import { constructTenantURL } from "coral-server/app/url";
+import { ReadOnlyError } from "coral-server/errors";
 import {
   GQLAuthIntegrations,
   GQLGoogleAuthIntegration,
@@ -50,6 +51,10 @@ export default class GoogleStrategy extends OAuth2Strategy<
 
     let user = await retrieveUserWithProfile(this.mongo, tenant.id, profile);
     if (!user) {
+      if (this.config.get("read_only")) {
+        throw new ReadOnlyError();
+      }
+
       if (!integration.allowRegistration) {
         // Registration is disabled, so we can't create the user user here.
         return null;

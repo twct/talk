@@ -220,6 +220,14 @@ const config = convict({
     env: "DISABLE_RATE_LIMITERS",
     arg: "disableRateLimiters",
   },
+  read_only: {
+    doc:
+      "Disables actions that can write to the database while in a read-only mode",
+    format: Boolean,
+    default: false,
+    env: "READ_ONLY",
+    arg: "readOnly",
+  },
 });
 
 export type Config = typeof config;

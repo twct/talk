@@ -1105,6 +1105,11 @@ type Settings {
   id: ID!
 
   """
+  readOnly when true, signals that this Tenant is in read-only mode.
+  """
+  readOnly: Boolean!
+
+  """
   domain is the domain that is associated with this Tenant.
   """
   domain: String! @auth(roles: [ADMIN])
@@ -1714,10 +1719,7 @@ type User {
   """
   moderatorNotes are notes left by moderators about the User.
   """
-  moderatorNotes: [ModeratorNote!]!
-    @auth(
-      roles: [ADMIN, MODERATOR]
-    )
+  moderatorNotes: [ModeratorNote!]! @auth(roles: [ADMIN, MODERATOR])
 
   """
   ignoreable is a computed property based on the
@@ -5400,12 +5402,16 @@ type Mutation {
   """
   createModeratorNote creates a note on a user account.
   """
-  createModeratorNote(input: CreateModeratorNoteInput!): CreateModeratorNotePayload! @auth(roles: [ADMIN, MODERATOR])
+  createModeratorNote(
+    input: CreateModeratorNoteInput!
+  ): CreateModeratorNotePayload! @auth(roles: [ADMIN, MODERATOR])
 
   """
   deleteModeratorNote deletes a note on a user account.
   """
-  deleteModeratorNote(input: DeleteModeratorNoteInput!): DeleteModeratorNotePayload! @auth(roles: [ADMIN, MODERATOR])
+  deleteModeratorNote(
+    input: DeleteModeratorNoteInput!
+  ): DeleteModeratorNotePayload! @auth(roles: [ADMIN, MODERATOR])
 }
 
 ##################

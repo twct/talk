@@ -4,7 +4,7 @@ import { moderationQueuesResolver } from "./ModerationQueues";
 
 export const Query: Required<GQLQueryTypeResolver<void>> = {
   story: (source, args, ctx) =>
-    ctx.tenant.stories.disableLazy
+    ctx.tenant.stories.disableLazy || ctx.config.get("read_only")
       ? ctx.loaders.Stories.find.load(args)
       : ctx.loaders.Stories.findOrCreate.load(args),
   stories: (source, args, ctx) => ctx.loaders.Stories.connection(args),

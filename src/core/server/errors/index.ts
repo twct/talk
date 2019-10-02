@@ -725,3 +725,11 @@ export class RawQueryNotAuthorized extends CoralError {
     });
   }
 }
+
+export class ReadOnlyError extends CoralError {
+  constructor() {
+    super({
+      code: ERROR_CODES.READ_ONLY,
+    });
+  }
+}

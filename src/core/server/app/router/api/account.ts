@@ -15,6 +15,7 @@ import {
 } from "coral-server/app/handlers";
 import { jsonMiddleware } from "coral-server/app/middleware/json";
 import { authenticate } from "coral-server/app/middleware/passport";
+import { readOnlyAware } from "coral-server/app/middleware/readOnlyAware";
 import { RouterOptions } from "coral-server/app/router/types";
 
 export function createNewAccountRouter(
@@ -22,6 +23,9 @@ export function createNewAccountRouter(
   { passport }: Pick<RouterOptions, "passport">
 ) {
   const router = express.Router();
+
+  // Add the read only aware middleware to the stack.
+  router.use(readOnlyAware(app.config));
 
   router.post(
     "/confirm",
