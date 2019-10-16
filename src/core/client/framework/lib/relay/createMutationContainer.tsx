@@ -7,6 +7,8 @@ import {
 } from "recompose";
 import { Environment } from "relay-runtime";
 
+import { executeAndEmit } from "coral-framework/helpers";
+
 import { CoralContext, withContext } from "../bootstrap";
 
 /**
@@ -37,14 +39,18 @@ function createMutationContainer<T extends string, I, R>(
           "createMutationContainer"
         );
 
-        private commit = (input: I) => {
-          this.props.context.eventEmitter.emit(`mutation.${propName}`, input);
-          return commit(
-            this.props.context.relayEnvironment,
+        private commit = (input: I) =>
+          executeAndEmit(
+            this.props.context.eventEmitter,
+            `internal.mutation.${propName}`,
             input,
-            this.props.context
+            () =>
+              commit(
+                this.props.context.relayEnvironment,
+                input,
+                this.props.context
+              )
           );
-        };
 
         public render() {
           const { context: _, ...rest } = this.props;

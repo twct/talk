@@ -7,6 +7,7 @@ import {
 } from "recompose";
 import { Environment } from "relay-runtime";
 
+import { executeAndEmit } from "coral-framework/helpers";
 import { Omit } from "coral-framework/types";
 
 import { CoralContext, useCoralContext, withContext } from "../bootstrap";
@@ -70,10 +71,13 @@ export function useMutation<I, R>(
 ): MutationProp<typeof mutation> {
   const context = useCoralContext();
   return useCallback<MutationProp<typeof mutation>>(
-    ((input: I) => {
-      context.eventEmitter.emit(`mutation.${mutation.name}`, input);
-      return mutation.commit(context.relayEnvironment, input, context);
-    }) as any,
+    ((input: I) =>
+      executeAndEmit(
+        context.eventEmitter,
+        `internal.mutation.${mutation.name}`,
+        input,
+        () => mutation.commit(context.relayEnvironment, input, context)
+      )) as any,
     [context]
   );
 }
@@ -98,17 +102,18 @@ export function withMutation<N extends string, I, R>(
           "withMutation"
         );
 
-        private commit = (input: I) => {
-          this.props.context.eventEmitter.emit(
-            `mutation.${mutation.name}`,
-            input
-          );
-          return mutation.commit(
-            this.props.context.relayEnvironment,
+        private commit = (input: I) =>
+          executeAndEmit(
+            this.props.context.eventEmitter,
+            `internal.mutation.${mutation.name}`,
             input,
-            this.props.context
+            () =>
+              mutation.commit(
+                this.props.context.relayEnvironment,
+                input,
+                this.props.context
+              )
           );
-        };
 
         public render() {
           const { context: _, ...rest } = this.props;

@@ -6,12 +6,18 @@ export default function emitEventAliases(
   value: any
 ) {
   switch (eventName) {
-    case "mutation.showAuthPopup":
+    case "internal.mutation.showAuthPopup":
       switch (value.view) {
         case "SIGN_IN":
           eventEmitter.emit("loginPrompt");
           break;
       }
+      break;
+    case "internal.mutation.createComment.success":
+      eventEmitter.emit("createComment", {
+        id: value.result.edge.node.id,
+        status: value.result.edge.node.status,
+      });
       break;
   }
 }

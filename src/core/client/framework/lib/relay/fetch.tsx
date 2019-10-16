@@ -13,6 +13,8 @@ import {
   Variables,
 } from "relay-runtime";
 
+import { executeAndEmit } from "coral-framework/helpers";
+
 import { CoralContext, useCoralContext, withContext } from "../bootstrap";
 import extractPayload from "./extractPayload";
 
@@ -68,10 +70,13 @@ export function useFetch<V, R>(
 ): FetchProp<typeof fetch> {
   const context = useCoralContext();
   return useCallback<FetchProp<typeof fetch>>(
-    ((variables: V) => {
-      context.eventEmitter.emit(`fetch.${fetch.name}`, variables);
-      return fetch.fetch(context.relayEnvironment, variables, context);
-    }) as any,
+    ((variables: V) =>
+      executeAndEmit(
+        context.eventEmitter,
+        `internal.fetch.${fetch.name}`,
+        variables,
+        () => fetch.fetch(context.relayEnvironment, variables, context)
+      )) as any,
     [context]
   );
 }
@@ -93,17 +98,18 @@ export function withFetch<N extends string, V, R>(
       }> {
         public static displayName = wrapDisplayName(BaseComponent, "withFetch");
 
-        private fetch = (variables: V) => {
-          this.props.context.eventEmitter.emit(
-            `fetch.${fetch.name}`,
-            variables
-          );
-          return fetch.fetch(
-            this.props.context.relayEnvironment,
+        private fetch = (variables: V) =>
+          executeAndEmit(
+            this.props.context.eventEmitter,
+            `internal.fetch.${fetch.name}`,
             variables,
-            this.props.context
+            () =>
+              fetch.fetch(
+                this.props.context.relayEnvironment,
+                variables,
+                this.props.context
+              )
           );
-        };
 
         public render() {
           const { context: _, ...rest } = this.props;

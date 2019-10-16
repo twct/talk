@@ -41,7 +41,8 @@ const Profile: FunctionComponent<ProfileProps> = props => {
     }
   `);
   const onTabClick = useCallback(
-    (tab: ProfileLocal["profileTab"]) => setLocal({ profileTab: tab }),
+    (tab: ProfileLocal["profileTab"]) =>
+      setLocal({ profileTab: tab }, { emitEvent: "profileTab" }),
     [setLocal]
   );
   return (

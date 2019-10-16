@@ -81,11 +81,15 @@ export const StreamContainer: FunctionComponent<Props> = props => {
   );
   const onChangeOrder = useCallback(
     (order: React.ChangeEvent<HTMLSelectElement>) =>
-      setLocal({ commentsOrderBy: order.target.value as any }),
+      setLocal(
+        { commentsOrderBy: order.target.value as any },
+        { emitEvent: "commentsOrderBy" }
+      ),
     [setLocal]
   );
   const onChangeTab = useCallback(
-    (tab: COMMENTS_TAB) => setLocal({ commentsTab: tab }),
+    (tab: COMMENTS_TAB) =>
+      setLocal({ commentsTab: tab }, { emitEvent: "commentsTab" }),
     [setLocal]
   );
   const banned = Boolean(

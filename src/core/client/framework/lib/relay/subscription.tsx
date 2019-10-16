@@ -50,12 +50,25 @@ export function useSubscription<V>(
   const context = useCoralContext();
   return useCallback<SubscriptionProp<typeof subscription>>(
     ((variables: V) => {
-      context.eventEmitter.emit(`subscription.${subscription.name}`, variables);
-      return subscription.subscribe(
+      context.eventEmitter.emit(
+        `internal.subscription.${subscription.name}.begin`,
+        variables
+      );
+      const disposable = subscription.subscribe(
         context.relayEnvironment,
         variables,
         context
       );
+      const wrapped = {
+        dispose: () => {
+          context.eventEmitter.emit(
+            `internal.subscription.${subscription.name}.end`,
+            variables
+          );
+          disposable.dispose();
+        },
+      };
+      return wrapped;
     }) as any,
     [context]
   );

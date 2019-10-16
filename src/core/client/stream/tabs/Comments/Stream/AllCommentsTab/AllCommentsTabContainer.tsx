@@ -103,7 +103,9 @@ export const AllCommentsTabContainer: FunctionComponent<Props> = props => {
     props.relay.hasMore(),
     props.story.settings.live.enabled,
   ]);
-  const [loadMore, isLoadingMore] = useLoadMore(props.relay, 10);
+  const [loadMore, isLoadingMore] = useLoadMore(props.relay, 10, {
+    emitEvent: "allComments",
+  });
   const viewMore = useMutation(AllCommentsTabViewNewMutation);
   const onViewMore = useCallback(() => viewMore({ storyID: props.story.id }), [
     props.story.id,

@@ -7,6 +7,8 @@ import {
 } from "recompose";
 import { Environment } from "relay-runtime";
 
+import executeAndEmit from "coral-framework/helpers/executeAndEmit";
+
 import { CoralContext, withContext } from "../bootstrap";
 
 /**
@@ -34,13 +36,18 @@ function createFetchContainer<T extends string, V, R>(
           "createFetchContainer"
         );
 
-        private fetch = (variables: V) => {
-          return fetch(
-            this.props.context.relayEnvironment,
+        private fetch = async (variables: V) =>
+          executeAndEmit(
+            this.props.context.eventEmitter,
+            `internal.fetch.${propName}`,
             variables,
-            this.props.context
+            () =>
+              fetch(
+                this.props.context.relayEnvironment,
+                variables,
+                this.props.context
+              )
           );
-        };
 
         public render() {
           const { context: _, ...rest } = this.props;

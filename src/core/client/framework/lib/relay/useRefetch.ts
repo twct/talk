@@ -4,6 +4,8 @@ import { Variables } from "relay-runtime";
 
 import { useEffectWhenChanged } from "coral-framework/hooks";
 
+import { useCoralContext } from "../bootstrap";
+
 type RefetchFunction = () => void;
 type IsRefetching = boolean;
 
@@ -14,12 +16,20 @@ type IsRefetching = boolean;
  */
 export default function useRefetch<V = Variables>(
   relay: RelayPaginationProp,
-  variables: V = {} as any
+  variables: V = {} as any,
+  options: { emitEvent?: string } = {}
 ): [RefetchFunction, IsRefetching] {
+  const { eventEmitter } = useCoralContext();
   const [manualRefetchCount, setManualRefetchCount] = useState(0);
   const [refetching, setRefetching] = useState(false);
   useEffectWhenChanged(() => {
     setRefetching(true);
+    if (options.emitEvent) {
+      eventEmitter.emit(
+        `internal.refetch.${options.emitEvent}.init`,
+        variables
+      );
+    }
     const disposable = relay.refetchConnection(
       10,
       error => {
@@ -28,11 +38,30 @@ export default function useRefetch<V = Variables>(
           // eslint-disable-next-line no-console
           console.error(error);
         }
+        if (options.emitEvent) {
+          if (error) {
+            eventEmitter.emit(
+              `internal.refetch.${options.emitEvent}.error`,
+              variables
+            );
+          } else {
+            eventEmitter.emit(
+              `internal.refetch.${options.emitEvent}.success`,
+              variables
+            );
+          }
+        }
       },
       variables
     );
     return () => {
       if (disposable) {
+        if (options.emitEvent) {
+          eventEmitter.emit(
+            `internal.refetch.${options.emitEvent}.cancel`,
+            variables
+          );
+        }
         disposable.dispose();
       }
     };

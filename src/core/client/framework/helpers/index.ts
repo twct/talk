@@ -12,3 +12,4 @@ export { default as clearHash } from "./clearHash";
 export { default as roleIsAtLeast } from "./roleIsAtLeast";
 export { default as resolveStoryURL } from "./resolveStoryURL";
 export { default as detectCountScript } from "./detectCountScript";
+export { default as executeAndEmit } from "./executeAndEmit";

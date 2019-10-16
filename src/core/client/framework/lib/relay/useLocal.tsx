@@ -65,6 +65,11 @@ function applySimplified(
   });
 }
 
+type SetLocalCallback<T> = (
+  update: LocalUpdater<OmitFragments<T>>,
+  options?: { emitEvent?: string }
+) => void;
+
 /**
  * useLocal is a React Hook that allows you to subscribe to the Client Local State
  * inside of the Relay Cache.
@@ -82,7 +87,7 @@ function applySimplified(
  */
 function useLocal<T>(
   fragmentSpec: GraphQLTaggedNode
-): [OmitFragments<T>, (update: LocalUpdater<OmitFragments<T>>) => void] {
+): [OmitFragments<T>, SetLocalCallback<T>] {
   const fragment =
     typeof fragmentSpec === "function"
       ? fragmentSpec().default
@@ -98,17 +103,23 @@ function useLocal<T>(
     node: { selections: fragment.selections },
     variables: {},
   };
-  const { relayEnvironment } = useCoralContext();
+  const { relayEnvironment, eventEmitter } = useCoralContext();
   const [local, setLocal] = useState<T>(
     () => relayEnvironment.lookup(selector).data as T
   );
-  const localUpdate = useCallback(
-    (update: LocalUpdater<T>) => {
+  const localUpdate = useCallback<SetLocalCallback<T>>(
+    (update, options = {}) => {
       commitLocalUpdate(relayEnvironment, store => {
         const record = store.get(LOCAL_ID)!;
         if (isAdvancedUpdater(update)) {
+          if (options.emitEvent) {
+            eventEmitter.emit(`internal.setLocal.${options.emitEvent}`);
+          }
           update(record);
         } else {
+          if (options.emitEvent) {
+            eventEmitter.emit(`internal.setLocal.${options.emitEvent}`, update);
+          }
           applySimplified(record, fragment.selections[0].selections, update);
         }
       });

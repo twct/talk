@@ -57,7 +57,9 @@ type FragmentVariables = Omit<
 >;
 
 export const ReplyListContainer: React.FunctionComponent<Props> = props => {
-  const [showAll, isLoadingShowAll] = useLoadMore(props.relay, 999999999);
+  const [showAll, isLoadingShowAll] = useLoadMore(props.relay, 999999999, {
+    emitEvent: "replyList",
+  });
   const subcribeToCommentReplyCreated = useSubscription(
     CommentReplyCreatedSubscription
   );

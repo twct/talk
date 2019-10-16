@@ -26,7 +26,9 @@ interface Props {
 }
 
 export const FeaturedCommentsContainer: FunctionComponent<Props> = props => {
-  const [loadMore, isLoadingMore] = useLoadMore(props.relay, 10);
+  const [loadMore, isLoadingMore] = useLoadMore(props.relay, 10, {
+    emitEvent: "featuredcomments",
+  });
   const comments = props.story.featuredComments.edges.map(edge => edge.node);
   return (
     <>
