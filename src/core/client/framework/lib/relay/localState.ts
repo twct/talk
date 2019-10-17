@@ -26,6 +26,14 @@ export function setAccessTokenInLocalState(
   localRecord.setValue(accessToken || "", "accessToken");
   if (accessToken) {
     const { payload } = parseJWT(accessToken);
+    if (payload.exp) {
+      const expiresIn = payload.exp - Date.now() / 1000;
+      if (expiresIn <= 0) {
+        localRecord.setValue("", "accessToken");
+        return;
+      }
+    }
+
     localRecord.setValue(payload.exp, "accessTokenExp");
     localRecord.setValue(payload.jti, "accessTokenJTI");
     // TODO: (cvle) maybe a timer to detect when accessToken has expired?

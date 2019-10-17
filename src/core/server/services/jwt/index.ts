@@ -9,7 +9,6 @@ import { Bearer, BearerOptions } from "permit";
 import uuid from "uuid/v4";
 
 import { Omit } from "coral-common/types";
-import { Config } from "coral-server/config";
 import {
   AuthenticationError,
   JWTRevokedError,
@@ -196,12 +195,11 @@ function isAsymmetricSigningAlgorithm(
 
 /**
  * Parses the config and provides the signing config.
- *
- * @param config the server configuration
  */
-export function createJWTSigningConfig(config: Config): JWTSigningConfig {
-  const secret = config.get("signing_secret");
-  const algorithm = config.get("signing_algorithm");
+export function createJWTSigningConfig(
+  secret: string,
+  algorithm: string = SymmetricSigningAlgorithm.HS256
+): JWTSigningConfig {
   if (isSymmetricSigningAlgorithm(algorithm)) {
     return createSymmetricSigningConfig(algorithm, secret);
   } else if (isAsymmetricSigningAlgorithm(algorithm)) {
