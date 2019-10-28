@@ -91,8 +91,8 @@ const CONFIG = {
   )
     ? process.env.TALK_LOGGING_LEVEL
     : process.env.NODE_ENV === 'test'
-      ? 'fatal'
-      : 'info',
+    ? 'fatal'
+    : 'info',
 
   // REVISION_HASH when using the docker build will contain the build hash that
   // it was built at.
@@ -288,6 +288,14 @@ const CONFIG = {
   SMTP_PORT: process.env.TALK_SMTP_PORT,
   SMTP_PASSWORD: process.env.TALK_SMTP_PASSWORD,
   SMTP_FROM_ADDRESS: process.env.TALK_SMTP_FROM_ADDRESS,
+
+  //------------------------------------------------------------------------------
+  // Amazon SES configuration
+  //------------------------------------------------------------------------------
+
+  AWS_SES_REGION: process.env.TALK_AWS_SES_REGION,
+  AWS_SES_ACCESS_KEY_ID: process.env.TALK_AWS_SES_ACCESS_KEY_ID,
+  AWS_SES_SECRET_ACCESS_KEY_ID: process.env.TALK_AWS_SES_SECRET_ACCESS_KEY_ID,
 
   //------------------------------------------------------------------------------
   // Flagging Config

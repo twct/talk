@@ -4,12 +4,17 @@ const { createLogger } = require('../services/logging');
 const logger = createLogger('jobs:mailer');
 const Context = require('../graph/context');
 const { get } = require('lodash');
+const aws = require('aws-sdk');
+
 const {
   SMTP_HOST,
   SMTP_USERNAME,
   SMTP_PORT,
   SMTP_PASSWORD,
   SMTP_FROM_ADDRESS,
+  AWS_SES_REGION,
+  AWS_SES_ACCESS_KEY_ID,
+  AWS_SES_SECRET_ACCESS_KEY_ID,
 } = require('../config');
 const { ErrMissingEmail } = require('../errors');
 
@@ -45,12 +50,30 @@ const createTransport = () => {
   return nodemailer.createTransport(options);
 };
 
+// createSESTransport with create a new SES transport
+const createSESTransport = () => {
+  aws.config.region = AWS_SES_REGION;
+  aws.config.accessKeyId = AWS_SES_ACCESS_KEY_ID;
+  aws.config.secretAccessKey = AWS_SES_SECRET_ACCESS_KEY_ID;
+
+  return nodemailer.createTransport({
+    SES: new aws.SES({
+      apiVersion: '2010-12-01',
+    }),
+  });
+};
+
 // sharedTransport is the transport singleton.
 let sharedTransport;
 
 // getTransport will retrieve the mailer transport singleton.
 const getTransport = () => {
   if (sharedTransport) {
+    return sharedTransport;
+  }
+
+  if (AWS_SES_ACCESS_KEY_ID && AWS_SES_SECRET_ACCESS_KEY_ID) {
+    sharedTransport = createSESTransport();
     return sharedTransport;
   }
 
